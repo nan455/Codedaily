@@ -27,6 +27,7 @@ if db_url.startswith("postgres://"):
 app.config.update(
     SQLALCHEMY_DATABASE_URI=db_url,
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    SQLALCHEMY_ENGINE_OPTIONS={"pool_pre_ping": True},
     MAIL_SERVER="smtp.gmail.com",
     MAIL_PORT=587,
     MAIL_USE_TLS=True,
@@ -205,12 +206,10 @@ def subscribe():
     
     try: 
         _send_welcome_email(sub)
-        print(f"✅ SUCCESS: Welcome email sent to {email}")
+        print(f"✅ SUCCESS: Welcome email sent to {email}", flush=True)
     except Exception as e: 
-        print(f"❌ CRITICAL EMAIL ERROR: {str(e)}") # <-- This will print the exact reason!
+        print(f"❌ CRITICAL EMAIL ERROR: {str(e)}", flush=True)
         app.logger.warning(f"Welcome email: {e}")
-        
-    return jsonify({"ok": True})
 
 
 @app.route("/dashboard")
