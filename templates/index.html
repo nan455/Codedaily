@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CodeDaily — Solve. Learn. Grow.</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;600;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/css/style.css"/>
+</head>
+<body class="landing">
+
+<nav class="nav">
+  <div class="logo"><span class="logo-bracket">&lt;</span>CodeDaily<span class="logo-bracket">/&gt;</span></div>
+  <a href="#subscribe" class="btn-cta-sm">Start free →</a>
+</nav>
+
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-inner">
+    <div class="hero-chip">🔥 Real LeetCode problems · Free forever</div>
+    <h1>Master DSA, JS & SQL<br><em>3 problems every morning</em></h1>
+    <p class="hero-sub">Solve directly in our editor. Get AI-powered hints when stuck.<br>View full solutions. Track your streak. Earn awards.</p>
+    <div class="type-row">
+      <div class="type-pill dsa">🧮 DSA / Algorithms</div>
+      <div class="type-pill js">⚡ JavaScript</div>
+      <div class="type-pill sql">🗄 SQL</div>
+    </div>
+  </div>
+</section>
+
+<section class="subscribe-section" id="subscribe">
+  <div class="sub-card">
+    <h2>Start solving today</h2>
+    <p class="sub-sub">Get 3 problems daily, matched to your level.</p>
+
+    <div id="flash-msg" class="flash" style="display:none"></div>
+
+    <div class="field">
+      <label>Your name</label>
+      <input type="text" id="inp-name" placeholder="Ravi Kumar" autocomplete="name"/>
+    </div>
+    <div class="field">
+      <label>Gmail address</label>
+      <input type="email" id="inp-email" placeholder="you@gmail.com" autocomplete="email"/>
+    </div>
+    <div class="field">
+      <label>Choose your difficulty</label>
+      <div class="diff-picker">
+        <label class="diff-opt"><input type="radio" name="difficulty" value="Easy" checked/><span class="diff-btn easy-btn"><span class="diff-dot"></span>Easy</span></label>
+        <label class="diff-opt"><input type="radio" name="difficulty" value="Medium"/><span class="diff-btn medium-btn"><span class="diff-dot"></span>Medium</span></label>
+        <label class="diff-opt"><input type="radio" name="difficulty" value="Hard"/><span class="diff-btn hard-btn"><span class="diff-dot"></span>Hard</span></label>
+      </div>
+    </div>
+    <button class="btn-cta" id="btn-sub">Subscribe free →</button>
+    <p class="sub-note">Email at 8 AM IST · Solve in-app · Unsubscribe anytime</p>
+  </div>
+</section>
+
+<section class="features">
+  <div class="feat-grid">
+    <div class="feat"><div class="feat-icon">📝</div><h3>Solve in-app</h3><p>Full code editor with syntax highlighting. No need to leave the site.</p></div>
+    <div class="feat"><div class="feat-icon">💡</div><h3>Progressive hints</h3><p>Stuck? Get 3 progressive hints that guide you without spoiling the answer.</p></div>
+    <div class="feat"><div class="feat-icon">✨</div><h3>Full solutions</h3><p>View complete solutions in Python, JavaScript, or Java.</p></div>
+    <div class="feat"><div class="feat-icon">🏅</div><h3>Earn awards</h3><p>Streak badges, category masters, speed solver — 13 awards to unlock.</p></div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="logo"><span class="logo-bracket">&lt;</span>CodeDaily<span class="logo-bracket">/&gt;</span></div>
+  <p>Built for engineers who get better every single day.</p>
+</footer>
+
+<script src="/static/js/main.js"></script>
+</body>
+</html>

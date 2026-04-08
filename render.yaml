@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: codedaily
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: codedaily-db
+          property: connectionString
+      - key: GMAIL_USER
+        sync: false          # fill in on Render dashboard
+      - key: GMAIL_APP_PASSWORD
+        sync: false          # fill in on Render dashboard
+      - key: ADMIN_TOKEN
+        sync: false          # set a random secret string
+
+databases:
+  - name: codedaily-db
+    databaseName: codedaily
+    user: codedaily

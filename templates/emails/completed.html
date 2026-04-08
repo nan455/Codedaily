@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <style>
+    body { margin:0; padding:0; font-family:'Segoe UI',Arial,sans-serif; background:#f4f4f4; color:#1a1a1a; }
+    .wrap { max-width:520px; margin:40px auto; background:#fff; border-radius:12px; overflow:hidden; border:1px solid #e4e4e4; text-align:center; }
+    .top-bar { background:#085041; padding:28px; }
+    .logo-txt { font-family:monospace; font-size:20px; font-weight:700; color:#fff; }
+    .logo-txt span { color:#5DCAA5; }
+    .content { padding:36px 28px; }
+    .big { font-size:52px; margin:0 0 12px; }
+    h1 { font-size:22px; font-weight:600; margin:0 0 10px; }
+    p  { font-size:14px; color:#555; line-height:1.7; margin:0 0 20px; }
+    .cta { display:inline-block; background:#085041; color:#fff !important; text-decoration:none; padding:12px 28px; border-radius:8px; font-size:14px; font-weight:600; }
+    .footer { padding:20px; border-top:1px solid #eee; font-size:12px; color:#aaa; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top-bar"><div class="logo-txt">code<span>daily</span></div></div>
+  <div class="content">
+    <div class="big">🎉</div>
+    <h1>You crushed it today, {{ sub.name.split()[0] }}!</h1>
+    <p>All 3 problems solved on {{ today }}. Your streak keeps going — come back tomorrow at 8 AM for 3 more!</p>
+    <a class="cta" href="{{ url_for('dashboard', _external=True) }}">View your dashboard →</a>
+  </div>
+  <div class="footer">This email was sent because you completed all 3 daily problems.</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Dashboard — CodeDaily</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;600;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/css/style.css"/>
+</head>
+<body class="dash-body">
+
+<!-- Award toast -->
+<div id="award-toast" class="award-toast" style="display:none">
+  <div class="toast-icon" id="toast-icon">🎯</div>
+  <div><div class="toast-sup">Award unlocked!</div><div class="toast-name" id="toast-name"></div></div>
+</div>
+
+<!-- ── Solve modal ────────────────────────────────────────── -->
+<div id="solve-modal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-cat" id="modal-cat">DSA / Algorithm</div>
+        <div class="modal-title" id="modal-title">Two Sum</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="diff-chip" id="modal-diff">Easy</span>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <!-- Left: problem -->
+      <div class="problem-pane">
+        <div class="problem-desc" id="modal-desc"></div>
+        <div class="test-cases" id="modal-tests"></div>
+        <div class="hint-section" style="margin-top:10px">
+          <button class="btn-hint" id="btn-hint" onclick="getNextHint()">💡 Get hint</button>
+          <div id="hint-box" class="hint-box" style="display:none"></div>
+        </div>
+        <div style="margin-top:12px">
+          <button class="btn-solution" onclick="toggleSolution()">✨ View solution</button>
+          <div id="solution-box" style="display:none;margin-top:10px">
+            <div class="lang-tabs" id="sol-lang-tabs">
+              <button class="lang-tab active" onclick="showSolLang('python',this)">Python</button>
+              <button class="lang-tab" onclick="showSolLang('javascript',this)">JS</button>
+              <button class="lang-tab" onclick="showSolLang('java',this)">Java</button>
+              <button class="lang-tab" onclick="showSolLang('sql',this)">SQL</button>
+            </div>
+            <pre class="code-block" id="solution-code"></pre>
+          </div>
+        </div>
+        <!-- Submit to LeetCode button (shown when LC linked with session) -->
+        <div id="lc-submit-section" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          <button class="btn-lc-submit" id="btn-lc-submit" onclick="submitToLeetCode()">
+            🚀 Also submit on LeetCode
+          </button>
+          <div id="lc-submit-msg" style="font-size:12px;margin-top:6px;display:none"></div>
+        </div>
+      </div>
+      <!-- Right: editor -->
+      <div class="editor-pane">
+        <div class="editor-toolbar">
+          <div class="lang-tabs" id="editor-lang-tabs">
+            <button class="lang-tab active" onclick="setLang('python',this)">Python</button>
+            <button class="lang-tab" onclick="setLang('javascript',this)">JavaScript</button>
+            <button class="lang-tab" onclick="setLang('java',this)">Java</button>
+            <button class="lang-tab" onclick="setLang('sql',this)">SQL</button>
+          </div>
+        </div>
+        <textarea id="code-editor" class="code-editor" spellcheck="false" placeholder="# Write your solution here..."></textarea>
+        <div class="editor-footer">
+          <div class="submit-note" id="submit-note">Write your solution above, then click Submit.</div>
+          <button class="btn-submit" id="btn-submit" onclick="submitCode()">▶ Submit solution</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LeetCode link modal ────────────────────────────────── -->
+<div id="lc-modal" class="modal-overlay" style="display:none" onclick="if(event.target.id==='lc-modal')closeLCModal()">
+  <div class="modal-box" style="max-width:480px;flex-direction:column;padding:2rem;max-height:90vh;overflow-y:auto">
+    <h3 style="margin-bottom:.4rem;font-family:var(--ff-head)">🔗 Link LeetCode Account</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1.25rem;line-height:1.6">
+      Link your LeetCode account to auto-sync solved problems.<br>
+      Optionally add a session cookie to also <strong style="color:var(--text)">submit directly to LeetCode</strong> from this app.
+    </p>
+    <div id="lc-msg" style="display:none;margin-bottom:.75rem"></div>
+
+    {% if sub.lc_username %}
+    <!-- Already linked -->
+    <div style="background:var(--green-dim);border:1px solid rgba(34,208,140,.3);border-radius:var(--rs);padding:12px 16px;margin-bottom:1rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <span style="font-size:14px">✅ Linked as <strong>{{ sub.lc_username }}</strong></span>
+        <button class="btn-ghost" style="font-size:12px;padding:5px 12px;color:var(--red);border-color:rgba(242,85,85,.3)" onclick="unlinkLC()">Unlink</button>
+      </div>
+      {% if sub.lc_session %}
+      <div style="font-size:12px;color:var(--green);margin-top:6px">⚡ Session cookie saved — direct submission enabled</div>
+      {% else %}
+      <div style="font-size:12px;color:var(--amber);margin-top:6px">⚠ No session cookie — sync only, no direct submission</div>
+      {% endif %}
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:.75rem">Update session cookie for direct submission:</p>
+    {% else %}
+    <div class="field">
+      <label style="display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:500">LeetCode username <span style="color:var(--red)">*</span></label>
+      <input type="text" id="lc-username-inp" placeholder="e.g. tourist"
+        style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rs);padding:11px 14px;font-size:14px;color:var(--text);outline:none;font-family:var(--ff-code)"/>
+    </div>
+    {% endif %}
+
+    <!-- Session cookie section -->
+    <details style="margin-bottom:1rem">
+      <summary style="font-size:13px;color:var(--blue);cursor:pointer;margin-bottom:.5rem">
+        ⚡ Add session cookie (for direct LeetCode submission)
+      </summary>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-top:.5rem">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.6">
+          <strong style="color:var(--text)">How to get your session cookie:</strong><br>
+          1. Log in to <a href="https://leetcode.com" target="_blank" style="color:var(--blue)">leetcode.com</a><br>
+          2. Open DevTools → F12 → Application tab<br>
+          3. Cookies → leetcode.com → copy <code style="background:var(--bg4);padding:1px 4px;border-radius:3px;font-size:11px">LEETCODE_SESSION</code> value<br>
+          4. Paste it below
+        </p>
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px">LEETCODE_SESSION cookie value</label>
+        <textarea id="lc-session-inp" placeholder="eyJ0eXAiOiJKV1QiLCJhbGci..."
+          style="width:100%;height:70px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--rs);padding:8px;font-size:11px;color:var(--text);font-family:var(--ff-code);resize:vertical;outline:none"></textarea>
+      </div>
+    </details>
+
+    <div style="display:flex;gap:8px">
+      <button class="btn-cta" style="flex:1;padding:10px;border:none" onclick="saveLCUsername()">
+        {{ 'Update' if sub.lc_username else 'Link account' }}
+      </button>
+      <button class="btn-ghost" onclick="closeLCModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── NAV ───────────────────────────────────────────────── -->
+<nav class="nav dash-nav">
+  <div class="logo"><span class="logo-bracket">&lt;</span>CodeDaily<span class="logo-bracket">/&gt;</span></div>
+  <div class="nav-right">
+    {% if sub.streak > 0 %}
+    <div class="streak-pill">🔥 <span id="streak-val">{{ sub.streak }}</span>d</div>
+    {% endif %}
+    <button class="btn-ghost" onclick="openDiffModal()">⚙ {{ sub.difficulty }}</button>
+    {% if sub.lc_username %}
+    <button class="btn-ghost" onclick="syncLC()" id="btn-lc-sync">⟳ LC Sync</button>
+    <button class="btn-ghost" onclick="openLCModal()" style="color:var(--green)">🔗 {{ sub.lc_username }}</button>
+    {% else %}
+    <button class="btn-ghost" onclick="openLCModal()">🔗 LeetCode</button>
+    {% endif %}
+    <a href="/logout" class="btn-ghost">Log out</a>
+  </div>
+</nav>
+
+<!-- ── Difficulty modal ──────────────────────────────────── -->
+<div id="diff-modal" class="modal-overlay" style="display:none" onclick="if(event.target.id==='diff-modal')closeDiffModal()">
+  <div class="modal-box" style="max-width:360px;flex-direction:column;padding:2rem">
+    <h3 style="margin-bottom:1rem;font-family:var(--ff-head)">Change difficulty</h3>
+    <div id="pdiff-msg" class="flash" style="display:none;margin-bottom:.75rem"></div>
+    <div class="diff-picker" style="flex-direction:column;gap:8px">
+      <label class="diff-opt"><input type="radio" name="pdiff" value="Easy" {{ 'checked' if sub.difficulty=='Easy' }}/><span class="diff-btn easy-btn" style="text-align:left;padding:12px 16px"><span class="diff-dot"></span>🟢 Easy — build fundamentals</span></label>
+      <label class="diff-opt"><input type="radio" name="pdiff" value="Medium" {{ 'checked' if sub.difficulty=='Medium' }}/><span class="diff-btn medium-btn" style="text-align:left;padding:12px 16px"><span class="diff-dot"></span>🟡 Medium — challenge yourself</span></label>
+      <label class="diff-opt"><input type="radio" name="pdiff" value="Hard" {{ 'checked' if sub.difficulty=='Hard' }}/><span class="diff-btn hard-btn" style="text-align:left;padding:12px 16px"><span class="diff-dot"></span>🔴 Hard — interview level</span></label>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1.25rem">
+      <button class="btn-cta" style="flex:1;padding:10px;border:none" onclick="saveDiff()">Save</button>
+      <button class="btn-ghost" onclick="closeDiffModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main content ──────────────────────────────────────── -->
+<div class="dash-wrap">
+
+  <div class="dash-header">
+    <div>
+      <h2 class="dash-greeting">Hey {{ sub.name.split()[0] }} 👋</h2>
+      <p class="dash-date">{{ today }}</p>
+    </div>
+    <div class="header-stats">
+      <div class="hstat"><div class="hstat-val" id="stat-streak">{{ sub.streak }}</div><div class="hstat-lbl">streak</div></div>
+      <div class="hstat-sep"></div>
+      <div class="hstat"><div class="hstat-val">{{ sub.total_done }}</div><div class="hstat-lbl">solved</div></div>
+      <div class="hstat-sep"></div>
+      <div class="hstat"><div class="hstat-val">{{ awards|length }}</div><div class="hstat-lbl">awards</div></div>
+    </div>
+  </div>
+
+  <!-- LC banner -->
+  {% if sub.lc_username %}
+  <div class="lc-banner">
+    <span>🔗 LeetCode: <strong>{{ sub.lc_username }}</strong>
+      {% if sub.lc_session %}<span style="font-size:11px;color:var(--green);margin-left:8px">⚡ submission enabled</span>{% endif %}
+    </span>
+    <div style="display:flex;gap:8px">
+      <button class="btn-lc-sync-banner" id="btn-lc-sync-banner" onclick="syncLC()">⟳ Sync now</button>
+      <button class="btn-ghost" style="font-size:12px;padding:5px 12px" onclick="openLCModal()">⚙ Settings</button>
+    </div>
+  </div>
+  <div id="lc-sync-msg" style="display:none;margin-bottom:.75rem"></div>
+  {% else %}
+  <div class="lc-banner lc-banner-cta">
+    <span>🔗 Link LeetCode to auto-sync solved problems & submit directly</span>
+    <button class="btn-lc-sync-banner" onclick="openLCModal()">Link now →</button>
+  </div>
+  {% endif %}
+
+  <!-- Progress bar -->
+  <div class="progress-card">
+    <div class="progress-hdr">
+      <span>Today's progress</span>
+      <span id="prog-text">{{ progress.count_done }}/3 solved</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="prog-fill" style="width:{{ (progress.count_done/3*100)|int }}%"></div>
+    </div>
+    <div class="progress-dots">
+      {% for q_id in ['dsa','js','sql'] %}
+      <span class="pdot {{ 'done' if progress[q_id+'_done'] else '' }}"></span>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if progress.all_done %}
+  <div class="done-banner">🎉 All 3 problems solved today! You're on fire. Come back tomorrow!</div>
+  {% endif %}
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('today',this)">Today</button>
+    <button class="tab" onclick="showTab('history',this)">History</button>
+    <button class="tab" onclick="showTab('awards',this)">Awards 🏅</button>
+  </div>
+
+  <!-- TODAY -->
+  <div id="tab-today">
+    <div class="q-grid">
+      {% set problems = [
+        ('dsa','DSA / Algorithm', questions.dsa, progress.dsa_done, progress.dsa_code, progress.dsa_lang),
+        ('js', 'JavaScript',      questions.js,  progress.js_done,  progress.js_code,  progress.js_lang),
+        ('sql','SQL',             questions.sql, progress.sql_done, progress.sql_code, progress.sql_lang),
+      ] %}
+      {% for q_id, label, q, is_done, saved_code, saved_lang in problems %}
+      <div class="q-card {{ 'solved' if is_done }}" id="card-{{ q_id }}">
+        <div class="q-card-top">
+          <div class="q-meta-row">
+            <span class="q-cat-dot {{ q_id }}"></span>
+            <span class="q-cat-label">{{ label }}</span>
+            <span class="diff-chip {{ q.difficulty|lower }}">{{ q.difficulty }}</span>
+          </div>
+          {% if is_done %}<div class="solved-badge">✓ Solved</div>{% endif %}
+        </div>
+        <div class="q-title">{{ q.title }}</div>
+        <div class="q-topic">{{ q.topic }}</div>
+        {% if is_done and saved_lang %}
+        <div class="submitted-info">Submitted in {{ saved_lang }}</div>
+        {% endif %}
+        <div class="q-actions">
+          <button class="btn-solve {{ 'btn-review' if is_done }}" onclick="openSolver('{{ q_id }}')">
+            {{ '👁 Review / Edit' if is_done else '▶ Solve now' }}
+          </button>
+          <a class="btn-lc" href="{{ q.link }}" target="_blank">↗ LC</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="tab-history" style="display:none">
+    <div class="history-grid">
+      {% for entry in history %}
+      <div class="hist-cell {{ 'perfect' if entry.all else ('partial' if entry.solved>0 else '') }}">
+        <div class="hist-day">{{ entry.day }}</div>
+        <div class="hist-date">{{ entry.date }}</div>
+        <div class="hist-score">{{ entry.solved }}/3</div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="legend">
+      <span class="leg"><span class="leg-dot perfect"></span>All done</span>
+      <span class="leg"><span class="leg-dot partial"></span>Partial</span>
+      <span class="leg"><span class="leg-dot"></span>Missed</span>
+    </div>
+  </div>
+
+  <!-- AWARDS -->
+  <div id="tab-awards" style="display:none">
+    <div class="awards-header">
+      <span>{{ awards|length }} / {{ all_awards|length }} unlocked</span>
+      <div class="awards-bar-wrap"><div class="awards-bar" style="width:{{ ((awards|length)/(all_awards|length)*100)|int }}%"></div></div>
+    </div>
+    <div class="awards-grid">
+      {% for key, aw in all_awards.items() %}
+      {% set earned = key in (awards|map(attribute='key')|list) %}
+      <div class="award-card {{ 'earned' if earned else 'locked' }}">
+        <div class="award-icon">{{ aw.icon }}</div>
+        <div class="award-name">{{ aw.name }}</div>
+        <div class="award-desc">{{ aw.desc }}</div>
+        {% if earned %}<div class="award-tick">✓</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<canvas id="confetti-canvas" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9000;display:none"></canvas>
+
+<script>
+const QUESTIONS   = {{ questions | tojson | safe }};
+const LC_USERNAME = {{ (sub.lc_username or '') | tojson }};
+const LC_HAS_SESSION = {{ ('true' if sub.lc_session else 'false') }};
+const PROGRESS = {
+  dsa_done: {{ progress.dsa_done | tojson }},
+  js_done:  {{ progress.js_done  | tojson }},
+  sql_done: {{ progress.sql_done | tojson }},
+  dsa_code: {{ (progress.dsa_code or '') | tojson }},
+  js_code:  {{ (progress.js_code  or '') | tojson }},
+  sql_code: {{ (progress.sql_code or '') | tojson }},
+  dsa_lang: {{ (progress.dsa_lang or 'python')     | tojson }},
+  js_lang:  {{ (progress.js_lang  or 'javascript') | tojson }},
+  sql_lang: {{ (progress.sql_lang or 'sql')        | tojson }},
+};
+</script>
+<script src="/static/js/dashboard.js"></script>
+</body>
+</html>
