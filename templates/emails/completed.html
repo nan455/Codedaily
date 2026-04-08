@@ -2,30 +2,118 @@
 <html>
 <head>
   <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width"/>
   <style>
     body { margin:0; padding:0; font-family:'Segoe UI',Arial,sans-serif; background:#f4f4f4; color:#1a1a1a; }
-    .wrap { max-width:520px; margin:40px auto; background:#fff; border-radius:12px; overflow:hidden; border:1px solid #e4e4e4; text-align:center; }
-    .top-bar { background:#085041; padding:28px; }
-    .logo-txt { font-family:monospace; font-size:20px; font-weight:700; color:#fff; }
+    .wrap { max-width:580px; margin:32px auto; background:#ffffff; border-radius:12px; overflow:hidden; border:1px solid #e4e4e4; }
+    .top-bar { background:#085041; padding:20px 28px; }
+    .logo-txt { font-family:monospace; font-size:20px; font-weight:700; color:#ffffff; letter-spacing:-0.5px; }
     .logo-txt span { color:#5DCAA5; }
-    .content { padding:36px 28px; }
-    .big { font-size:52px; margin:0 0 12px; }
-    h1 { font-size:22px; font-weight:600; margin:0 0 10px; }
-    p  { font-size:14px; color:#555; line-height:1.7; margin:0 0 20px; }
-    .cta { display:inline-block; background:#085041; color:#fff !important; text-decoration:none; padding:12px 28px; border-radius:8px; font-size:14px; font-weight:600; }
-    .footer { padding:20px; border-top:1px solid #eee; font-size:12px; color:#aaa; }
+    .content { padding:28px; }
+    h1 { font-size:22px; font-weight:600; margin:0 0 8px; }
+    .sub { color:#666; font-size:14px; margin-bottom:24px; }
+    .q-block { border:1px solid #e8e8e8; border-radius:10px; overflow:hidden; margin-bottom:16px; }
+    .q-hdr { padding:10px 16px; display:flex; align-items:center; justify-content:space-between; }
+    .q-hdr-dsa { background:#E1F5EE; }
+    .q-hdr-js  { background:#FAEEDA; }
+    .q-hdr-sql { background:#E6F1FB; }
+    .q-type { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+    .type-dsa { color:#085041; }
+    .type-js  { color:#633806; }
+    .type-sql { color:#0C447C; }
+    .diff { font-size:11px; padding:2px 8px; border-radius:10px; font-weight:500; }
+    .easy   { background:#EAF3DE; color:#3B6D11; }
+    .medium { background:#FAEEDA; color:#633806; }
+    .hard   { background:#FCEBEB; color:#791F1F; }
+    .q-body { padding:14px 16px; }
+    .q-title { font-size:16px; font-weight:600; margin-bottom:4px; }
+    .q-desc  { font-size:13px; color:#555; line-height:1.6; margin-bottom:12px; }
+    .q-topic { font-size:12px; color:#888; margin-bottom:12px; }
+    .solve-btn {
+      display:inline-block; background:#534AB7; color:#ffffff !important;
+      text-decoration:none; padding:9px 18px; border-radius:8px;
+      font-size:13px; font-weight:600;
+    }
+    .solve-btn.dsa { background:#0F6E56; }
+    .solve-btn.js  { background:#BA7517; }
+    .solve-btn.sql { background:#185FA5; }
+    .mark-section { background:#f9f9f9; border-top:1px solid #eee; padding:20px 28px; text-align:center; }
+    .mark-btn {
+      display:inline-block; background:#085041; color:#fff !important;
+      text-decoration:none; padding:12px 28px; border-radius:8px;
+      font-size:15px; font-weight:600;
+    }
+    .mark-note { font-size:12px; color:#888; margin-top:8px; }
+    .footer { padding:20px 28px; border-top:1px solid #eee; text-align:center; }
+    .footer p { font-size:12px; color:#aaa; margin:4px 0; }
+    .footer a { color:#aaa; }
   </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top-bar"><div class="logo-txt">code<span>daily</span></div></div>
-  <div class="content">
-    <div class="big">🎉</div>
-    <h1>You crushed it today, {{ sub.name.split()[0] }}!</h1>
-    <p>All 3 problems solved on {{ today }}. Your streak keeps going — come back tomorrow at 8 AM for 3 more!</p>
-    <a class="cta" href="{{ url_for('dashboard', _external=True) }}">View your dashboard →</a>
+
+  <div class="top-bar">
+    <div class="logo-txt">code<span>daily</span></div>
   </div>
-  <div class="footer">This email was sent because you completed all 3 daily problems.</div>
+
+  <div class="content">
+    <h1>Your 3 problems for {{ today }}</h1>
+    <p class="sub">Hi {{ sub.name.split()[0] }}, here are today's challenges. Use any language you like!</p>
+
+    <!-- DSA -->
+    <div class="q-block">
+      <div class="q-hdr q-hdr-dsa">
+        <span class="q-type type-dsa">DSA / Algorithm</span>
+        <span class="diff {{ questions.dsa.diff|lower }}">{{ questions.dsa.diff }}</span>
+      </div>
+      <div class="q-body">
+        <div class="q-title">{{ questions.dsa.title }}</div>
+        <div class="q-desc">{{ questions.dsa.desc }}</div>
+        <div class="q-topic">Topics: {{ questions.dsa.topic }} · {{ questions.dsa.platform }}</div>
+        <a class="solve-btn dsa" href="{{ questions.dsa.link }}" target="_blank">Solve this problem →</a>
+      </div>
+    </div>
+
+    <!-- JS -->
+    <div class="q-block">
+      <div class="q-hdr q-hdr-js">
+        <span class="q-type type-js">JavaScript</span>
+        <span class="diff {{ questions.js.diff|lower }}">{{ questions.js.diff }}</span>
+      </div>
+      <div class="q-body">
+        <div class="q-title">{{ questions.js.title }}</div>
+        <div class="q-desc">{{ questions.js.desc }}</div>
+        <div class="q-topic">Topics: {{ questions.js.topic }} · {{ questions.js.platform }}</div>
+        <a class="solve-btn js" href="{{ questions.js.link }}" target="_blank">Solve this problem →</a>
+      </div>
+    </div>
+
+    <!-- SQL -->
+    <div class="q-block">
+      <div class="q-hdr q-hdr-sql">
+        <span class="q-type type-sql">SQL</span>
+        <span class="diff {{ questions.sql.diff|lower }}">{{ questions.sql.diff }}</span>
+      </div>
+      <div class="q-body">
+        <div class="q-title">{{ questions.sql.title }}</div>
+        <div class="q-desc">{{ questions.sql.desc }}</div>
+        <div class="q-topic">Topics: {{ questions.sql.topic }} · {{ questions.sql.platform }}</div>
+        <a class="solve-btn sql" href="{{ questions.sql.link }}" target="_blank">Solve this problem →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="mark-section">
+    <p style="font-size:15px;font-weight:600;margin:0 0 12px">Solved a problem? Mark it done on your dashboard.</p>
+    <a class="mark-btn" href="{{ dashboard_url }}">Go to Dashboard →</a>
+    <p class="mark-note">Your progress updates instantly. All 3 done = streak extended! 🔥</p>
+  </div>
+
+  <div class="footer">
+    <p>You're receiving this because you subscribed to CodeDaily with {{ sub.email }}</p>
+    <p><a href="{{ unsubscribe_url }}">Unsubscribe</a></p>
+  </div>
+
 </div>
 </body>
 </html>

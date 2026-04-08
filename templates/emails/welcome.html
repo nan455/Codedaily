@@ -53,12 +53,12 @@
     <p>Today's problems are already waiting for you on your dashboard. Start now!</p>
 
     <div class="cta-wrap">
-      <a class="cta" href="{{ url_for('dashboard', _external=True) }}">View today's problems →</a>
+      <a class="cta" href="{{ dashboard_url }}">View today's problems →</a>
     </div>
   </div>
   <div class="footer">
     <p>You subscribed with {{ sub.email }}.</p>
-    <p><a href="{{ url_for('unsubscribe', sub_id=sub.id, _external=True) }}">Unsubscribe</a></p>
+    <p><a href="{{ unsubscribe_url }}">Unsubscribe</a></p>
   </div>
 </div>
 </body>

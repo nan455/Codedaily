@@ -33,9 +33,13 @@ app.config.update(
     MAIL_USERNAME=os.environ.get("GMAIL_USER"),
     MAIL_PASSWORD=os.environ.get("GMAIL_APP_PASSWORD"),
     MAIL_DEFAULT_SENDER=os.environ.get("GMAIL_USER"),
-    SERVER_NAME=os.environ.get("SERVER_NAME", "127.0.0.1:5000"),
-    PREFERRED_URL_SCHEME=os.environ.get("URL_SCHEME", "http"),
+    # DO NOT set SERVER_NAME here — it breaks routing on Render.
+    # We handle external URLs manually in email helpers below.
 )
+
+# Your deployed app URL — set this in Render env vars as APP_URL
+# e.g. https://codedaily.onrender.com  (no trailing slash)
+APP_URL = os.environ.get("APP_URL", "http://127.0.0.1:5000")
 
 db = SQLAlchemy(app)
 mail = Mail(app)
@@ -522,24 +526,33 @@ def _verify_lc_user(username):
 def _send_welcome_email(sub):
     seed = int(date.today().strftime("%Y%m%d"))
     questions = pick_daily_questions(sub.difficulty, seed)
-    html = render_template("emails/welcome.html", sub=sub, questions=questions)
+    html = render_template("emails/welcome.html", sub=sub, questions=questions,
+        dashboard_url=f"{APP_URL}/dashboard",
+        unsubscribe_url=f"{APP_URL}/unsubscribe/{sub.id}")
     mail.send(Message("Welcome to CodeDaily!", recipients=[sub.email], html=html))
 
 
 def _send_daily_emails():
-    seed = int(date.today().strftime("%Y%m%d"))
-    today_str = date.today().strftime("%A, %d %B %Y")
-    for sub in Subscriber.query.filter_by(active=True).all():
-        try:
-            q = pick_daily_questions(sub.difficulty, seed)
-            html = render_template("emails/daily.html", sub=sub, questions=q, today=today_str)
-            mail.send(Message(f"CodeDaily — 3 problems for {date.today().strftime('%d %b')}",
-                recipients=[sub.email], html=html))
-        except Exception as e: app.logger.error(f"Email failed {sub.email}: {e}")
+    """Called by APScheduler — must push its own app context since it runs in a background thread."""
+    with app.app_context():
+        seed = int(date.today().strftime("%Y%m%d"))
+        today_str = date.today().strftime("%A, %d %B %Y")
+        for sub in Subscriber.query.filter_by(active=True).all():
+            try:
+                q = pick_daily_questions(sub.difficulty, seed)
+                html = render_template("emails/daily.html", sub=sub, questions=q, today=today_str,
+                    dashboard_url=f"{APP_URL}/dashboard",
+                    unsubscribe_url=f"{APP_URL}/unsubscribe/{sub.id}")
+                mail.send(Message(f"CodeDaily — 3 problems for {date.today().strftime('%d %b')}",
+                    recipients=[sub.email], html=html))
+                app.logger.info(f"Daily email sent to {sub.email}")
+            except Exception as e:
+                app.logger.error(f"Email failed {sub.email}: {e}")
 
 
 def _send_completion_email(sub):
-    html = render_template("emails/completed.html", sub=sub, today=date.today().strftime("%A, %d %B"))
+    html = render_template("emails/completed.html", sub=sub, today=date.today().strftime("%A, %d %B"),
+        dashboard_url=f"{APP_URL}/dashboard")
     mail.send(Message("All 3 done today! 🎉", recipients=[sub.email], html=html))
 
 

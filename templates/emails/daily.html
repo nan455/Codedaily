@@ -105,13 +105,13 @@
 
   <div class="mark-section">
     <p style="font-size:15px;font-weight:600;margin:0 0 12px">Solved a problem? Mark it done on your dashboard.</p>
-    <a class="mark-btn" href="{{ url_for('dashboard', _external=True) }}">Go to Dashboard →</a>
+    <a class="mark-btn" href="{{ dashboard_url }}">Go to Dashboard →</a>
     <p class="mark-note">Your progress updates instantly. All 3 done = streak extended! 🔥</p>
   </div>
 
   <div class="footer">
     <p>You're receiving this because you subscribed to CodeDaily with {{ sub.email }}</p>
-    <p><a href="{{ url_for('unsubscribe', sub_id=sub.id, _external=True) }}">Unsubscribe</a></p>
+    <p><a href="{{ unsubscribe_url }}">Unsubscribe</a></p>
   </div>
 
 </div>
