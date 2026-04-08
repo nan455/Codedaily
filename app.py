@@ -202,8 +202,14 @@ def subscribe():
     sub = Subscriber(name=name, email=email, difficulty=diff)
     db.session.add(sub); db.session.commit()
     session["subscriber_id"] = sub.id
-    try: _send_welcome_email(sub)
-    except Exception as e: app.logger.warning(f"Welcome email: {e}")
+    
+    try: 
+        _send_welcome_email(sub)
+        print(f"✅ SUCCESS: Welcome email sent to {email}")
+    except Exception as e: 
+        print(f"❌ CRITICAL EMAIL ERROR: {str(e)}") # <-- This will print the exact reason!
+        app.logger.warning(f"Welcome email: {e}")
+        
     return jsonify({"ok": True})
 
 
