@@ -30,16 +30,15 @@ app.config.update(
     MAIL_SERVER="smtp.gmail.com",
     MAIL_PORT=587,
     MAIL_USE_TLS=True,
+    MAIL_USE_SSL=False,
     MAIL_USERNAME=os.environ.get("GMAIL_USER"),
     MAIL_PASSWORD=os.environ.get("GMAIL_APP_PASSWORD"),
     MAIL_DEFAULT_SENDER=os.environ.get("GMAIL_USER"),
-    # DO NOT set SERVER_NAME here — it breaks routing on Render.
-    # We handle external URLs manually in email helpers below.
+    # SERVER_NAME removed — it breaks Flask routing and email url_for on Render
 )
 
-# Your deployed app URL — set this in Render env vars as APP_URL
-# e.g. https://codedaily.onrender.com  (no trailing slash)
-APP_URL = os.environ.get("APP_URL", "http://127.0.0.1:5000")
+# Used for building absolute URLs in emails (no url_for needed)
+APP_URL = os.environ.get("APP_URL", "https://codedaily-tiw0.onrender.com").rstrip("/")
 
 db = SQLAlchemy(app)
 mail = Mail(app)
@@ -509,8 +508,33 @@ def logout(): session.clear(); return redirect(url_for("index"))
 
 @app.route("/admin/send-daily")
 def admin_send_daily():
-    if request.args.get("token") != os.environ.get("ADMIN_TOKEN", "changeme"): return "Unauthorized", 403
-    _send_daily_emails(); return "Done!"
+    if request.args.get("token") != os.environ.get("ADMIN_TOKEN", "changeme"):
+        return "Unauthorized", 403
+    try:
+        _send_daily_emails()
+        return "✅ Done! Emails sent. Check Render logs for details."
+    except Exception as e:
+        return f"❌ Error: {e}", 500
+
+@app.route("/admin/test-email")
+def admin_test_email():
+    """Send a single test email to verify SMTP is working on Render."""
+    if request.args.get("token") != os.environ.get("ADMIN_TOKEN", "changeme"):
+        return "Unauthorized", 403
+    test_to = request.args.get("to", os.environ.get("GMAIL_USER", ""))
+    if not test_to:
+        return "Pass ?to=youremail@gmail.com", 400
+    try:
+        mail.send(Message(
+            subject="CodeDaily — SMTP Test ✅",
+            recipients=[test_to],
+            html=f"<h2>SMTP is working!</h2><p>Sent from Render at {datetime.utcnow()} UTC</p>"
+                 f"<p>GMAIL_USER = {os.environ.get('GMAIL_USER','NOT SET')}</p>"
+                 f"<p>APP_URL = {APP_URL}</p>"
+        ))
+        return f"✅ Test email sent to {test_to}! Check your inbox."
+    except Exception as e:
+        return f"❌ SMTP Error: {e}", 500
 
 
 def _verify_lc_user(username):
@@ -533,11 +557,13 @@ def _send_welcome_email(sub):
 
 
 def _send_daily_emails():
-    """Called by APScheduler — must push its own app context since it runs in a background thread."""
+    """APScheduler runs this in a thread — must push its own app context."""
     with app.app_context():
         seed = int(date.today().strftime("%Y%m%d"))
         today_str = date.today().strftime("%A, %d %B %Y")
-        for sub in Subscriber.query.filter_by(active=True).all():
+        subs = Subscriber.query.filter_by(active=True).all()
+        app.logger.info(f"[EMAIL] Starting daily send to {len(subs)} subscribers")
+        for sub in subs:
             try:
                 q = pick_daily_questions(sub.difficulty, seed)
                 html = render_template("emails/daily.html", sub=sub, questions=q, today=today_str,
@@ -545,9 +571,9 @@ def _send_daily_emails():
                     unsubscribe_url=f"{APP_URL}/unsubscribe/{sub.id}")
                 mail.send(Message(f"CodeDaily — 3 problems for {date.today().strftime('%d %b')}",
                     recipients=[sub.email], html=html))
-                app.logger.info(f"Daily email sent to {sub.email}")
+                app.logger.info(f"[EMAIL] ✅ Sent to {sub.email}")
             except Exception as e:
-                app.logger.error(f"Email failed {sub.email}: {e}")
+                app.logger.error(f"[EMAIL] ❌ Failed {sub.email}: {e}")
 
 
 def _send_completion_email(sub):
